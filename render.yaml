@@ -17,9 +17,9 @@ services:
       - key: JWT_SECRET
         sync: false # Set this to a random secret string in Render Dashboard
 
+staticSites:
   # React Frontend Static Site
-  - type: static
-    name: medicare-frontend
+  - name: medicare-frontend
     buildCommand: npm install && CI=false npm run build
     publishPath: build
     rootDir: frontend
