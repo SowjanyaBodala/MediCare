@@ -22,7 +22,7 @@ services:
     name: medicare-frontend
     runtime: static
     buildCommand: npm install && CI=false npm run build
-    publishPath: build
+    staticPublishPath: build
     rootDir: frontend
     envVars:
       - key: REACT_APP_API_URL
