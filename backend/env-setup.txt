@@ -1,0 +1,38 @@
+# BACKEND ENVIRONMENT SETUP
+# 
+# STEP 1: Create a file named ".env" in the backend folder
+# STEP 2: Copy the following content and paste it into the .env file
+# STEP 3: Replace <db_username> and <db_password> with your actual MongoDB Atlas credentials
+# STEP 4: Make sure you have whitelisted your IP address in MongoDB Atlas
+#
+# ============================================
+
+# MongoDB Atlas Connection
+MONGODB_URI=mongodb+srv://<db_username>:<db_password>@cluster0.nlyqqie.mongodb.net/medicare?retryWrites=true&w=majority
+
+# JWT Secret Key (Generate a random secure string)
+JWT_SECRET=medicare_super_secret_key_change_in_production_12345
+
+# Server Port
+PORT=5000
+
+# Node Environment
+NODE_ENV=development
+
+# ============================================
+# IMPORTANT INSTRUCTIONS:
+#
+# 1. Go to MongoDB Atlas → Security → Database Access
+#    Create a database user if you haven't already
+#    Username: <your_username>
+#    Password: <your_password> (copy this, you won't see it again!)
+#
+# 2. Go to MongoDB Atlas → Security → Network Access
+#    Click "Add IP Address" → Add Current IP Address
+#    OR click "Allow Access from Anywhere" (0.0.0.0/0) for development
+#
+# 3. Replace <db_username> and <db_password> in the MONGODB_URI above
+#    Example: mongodb+srv://admin:MyPassword123@cluster0.nlyqqie.mongodb.net/medicare?retryWrites=true&w=majority
+#
+# ============================================
+
