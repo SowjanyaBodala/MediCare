@@ -4,7 +4,7 @@ MediCare+ is a premium, modern web application designed for comprehensive hospit
 
 ## 🚀 Live Deployment Links
 
-- **🌐 Live Frontend App:** [https://medicare-frontend.onrender.com](https://medicare-frontend.onrender.com)
+- **🌐 Live Frontend App:** [https://medicare-frontend-jrcr.onrender.com](https://medicare-frontend-jrcr.onrender.com)
 - **⚙️ Live Backend API:** [https://medicare-backend-ee6n.onrender.com](https://medicare-backend-ee6n.onrender.com)
 
 ---
