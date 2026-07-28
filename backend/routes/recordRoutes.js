@@ -14,11 +14,11 @@ const handleValidation = (req, res, next) => {
   next();
 };
 
-// Create medical record (doctor/admin)
+// Create medical record (doctor/admin/patient)
 router.post(
   "/",
   protect,
-  authorize("admin", "doctor"),
+  authorize("admin", "doctor", "patient"),
   [
     body("patientId").isMongoId(),
     body("type").optional().isIn(["prescription", "lab", "imaging", "note", "other"]),
@@ -42,6 +42,11 @@ router.post(
         doctorId = doctor._id;
       } else if (req.body.doctorId) {
         doctorId = req.body.doctorId; // admin may provide doctorId explicitly
+      }
+
+      // Enforce patientId for patient role
+      if (req.user.role === "patient") {
+        req.body.patientId = req.user._id;
       }
 
       const record = await MedicalRecord.create({ ...req.body, doctorId });

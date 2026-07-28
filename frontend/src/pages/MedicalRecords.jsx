@@ -13,6 +13,16 @@ const MedicalRecords = () => {
   const categories = ["All", "Lab Reports", "Prescriptions", "Imaging", "Visit Summaries"];
   const [activeCategory, setActiveCategory] = useState("All");
 
+  // Modal & upload states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [newRecord, setNewRecord] = useState({
+    title: "",
+    type: "other",
+    description: "",
+  });
+  const [selectedFile, setSelectedFile] = useState(null);
+
   // Map backend type to frontend category
   const typeToCategory = {
     lab: "Lab Reports",
@@ -29,54 +39,96 @@ const MedicalRecords = () => {
     navigate("/login");
   };
 
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        setLoading(true);
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
-        if (userData.role === "admin") {
-          toast.info("Redirected to Admin Dashboard");
-          navigate("/admin");
-          return;
-        }
-        if (!userData || !userData.token) {
-          toast.error("Please login to access medical records.");
-          navigate("/login");
-          return;
-        }
-        setCurrentUser(userData);
-
-        const response = await api.get("/records/mine");
-        if (response.data.success) {
-          // Map backend data to frontend format
-          const mappedRecords = response.data.data.map((record) => {
-            const doctorName = record.doctorId?.name || "Unknown Doctor";
-            const fileType = record.files?.[0]?.mimetype || "application/pdf";
-            const isImage = fileType.includes("image");
-            
-            return {
-              id: record._id,
-              title: record.title,
-              category: typeToCategory[record.type] || "Visit Summaries",
-              date: new Date(record.createdAt).toISOString().split("T")[0],
-              doctor: doctorName.startsWith("Dr.") ? doctorName : `Dr. ${doctorName}`,
-              type: isImage ? "image" : "pdf",
-              description: record.description,
-            };
-          });
-          setRecords(mappedRecords);
-        }
-      } catch (error) {
-        console.error("Failed to fetch medical records:", error);
-        toast.error("Failed to load medical records");
-        setRecords([]);
-      } finally {
-        setLoading(false);
+  const fetchRecords = async () => {
+    try {
+      setLoading(true);
+      const userData = JSON.parse(localStorage.getItem("user") || "{}");
+      if (userData.role === "admin") {
+        toast.info("Redirected to Admin Dashboard");
+        navigate("/admin");
+        return;
       }
-    };
+      if (!userData || !userData.token) {
+        toast.error("Please login to access medical records.");
+        navigate("/login");
+        return;
+      }
+      setCurrentUser(userData);
 
+      const response = await api.get("/records/mine");
+      if (response.data.success) {
+        // Map backend data to frontend format
+        const mappedRecords = response.data.data.map((record) => {
+          const doctorName = record.doctorId?.name || "Self Uploaded";
+          const fileType = record.files?.[0]?.mimetype || "application/pdf";
+          const isImage = fileType.includes("image");
+          
+          return {
+            id: record._id,
+            title: record.title,
+            category: typeToCategory[record.type] || "Visit Summaries",
+            date: new Date(record.createdAt).toISOString().split("T")[0],
+            doctor: doctorName.startsWith("Dr.") || doctorName === "Self Uploaded" ? doctorName : `Dr. ${doctorName}`,
+            type: isImage ? "image" : "pdf",
+            description: record.description,
+          };
+        });
+        setRecords(mappedRecords);
+      }
+    } catch (error) {
+      console.error("Failed to fetch medical records:", error);
+      toast.error("Failed to load medical records");
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchRecords();
   }, []);
+
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (!newRecord.title.trim()) {
+      toast.error("Please enter a document title");
+      return;
+    }
+    setUploadLoading(true);
+    try {
+      let files = [];
+      if (selectedFile) {
+        files.push({
+          filename: selectedFile.name,
+          mimetype: selectedFile.type || "application/octet-stream",
+          size: selectedFile.size || 0,
+          url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" // mock URL
+        });
+      }
+      
+      const payload = {
+        patientId: currentUser._id,
+        title: newRecord.title,
+        type: newRecord.type,
+        description: newRecord.description,
+        files: files
+      };
+      
+      const response = await api.post("/records", payload);
+      if (response.data.success) {
+        toast.success("Medical record uploaded successfully!");
+        setIsModalOpen(false);
+        setNewRecord({ title: "", type: "other", description: "" });
+        setSelectedFile(null);
+        fetchRecords();
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error(error.response?.data?.message || "Failed to upload medical record");
+    } finally {
+      setUploadLoading(false);
+    }
+  };
 
   const filteredRecords = records.filter(record => activeCategory === "All" || record.category === activeCategory);
 
@@ -172,7 +224,10 @@ const MedicalRecords = () => {
               </h1>
               <p className="text-gray-600">Access and manage your health records</p>
             </div>
-            <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all"
+            >
               <Upload className="h-4 w-4" /> Upload Record
             </button>
           </div>
@@ -206,12 +261,91 @@ const MedicalRecords = () => {
             ) : (
               <div className="col-span-full text-center py-12">
                 <Clipboard className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">No {activeCategory.toLowerCase()} found</p>
+                <p className="text-gray-500 text-lg">No {activeCategory === "All" ? "records" : activeCategory.toLowerCase()} found</p>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Upload Record Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-scale-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Upload Medical Record</h2>
+            <form onSubmit={handleUploadSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Document Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Blood Test Results"
+                  value={newRecord.title}
+                  onChange={(e) => setNewRecord({ ...newRecord, title: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={newRecord.type}
+                  onChange={(e) => setNewRecord({ ...newRecord, type: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="lab">Lab Report</option>
+                  <option value="prescription">Prescription</option>
+                  <option value="imaging">Imaging</option>
+                  <option value="note">Visit Summary</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  placeholder="Add a brief description (optional)..."
+                  value={newRecord.description}
+                  onChange={(e) => setNewRecord({ ...newRecord, description: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 h-24 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Choose File (PDF or Image)</label>
+                <input
+                  type="file"
+                  required
+                  accept="application/pdf,image/*"
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setNewRecord({ title: "", type: "other", description: "" });
+                    setSelectedFile(null);
+                  }}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploadLoading}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50"
+                >
+                  {uploadLoading ? "Uploading..." : "Upload"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
