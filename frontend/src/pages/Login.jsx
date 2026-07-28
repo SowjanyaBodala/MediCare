@@ -35,10 +35,16 @@ const Login = () => {
     try {
       const res = await login({ email, password });
       // Redirect based on user role
-      if (res && res.data && res.data.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
+      if (res && res.data) {
+        if (res.data.role === "admin") {
+          navigate("/admin");
+        } else if (res.data.role === "patient") {
+          navigate("/patient-dashboard");
+        } else if (res.data.role === "doctor") {
+          navigate("/"); // Doctors redirect to home page
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
