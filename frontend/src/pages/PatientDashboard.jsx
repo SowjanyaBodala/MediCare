@@ -257,7 +257,12 @@ const PatientDashboard = () => {
                       Prescribed by {presc.prescribedBy} on {presc.date}
                     </p>
                   </div>
-                  <button className="px-4 py-2 text-blue-500 border border-blue-500 rounded-xl hover:bg-blue-50 transition-all">
+                  <button 
+                    onClick={() => toast.success(`Refill requested for ${presc.medication}!`, {
+                      description: `Your request has been sent to ${presc.prescribedBy} for approval.`,
+                    })}
+                    className="px-4 py-2 text-blue-500 border border-blue-500 rounded-xl hover:bg-blue-50 transition-all"
+                  >
                     Refill
                   </button>
                 </div>
