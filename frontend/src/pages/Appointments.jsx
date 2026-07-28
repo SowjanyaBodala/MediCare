@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { Activity, User, Calendar, Clock } from "lucide-react";
+import { Activity, User, Calendar, Clock, ChevronDown, LogOut, UserCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import api from "../utils/api";
@@ -11,6 +11,24 @@ const Appointments = () => {
   const [doctors, setDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  const [user, setUser] = useState(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setShowProfileDropdown(false);
+    window.location.reload();
+  };
 
   const [formData, setFormData] = useState({
     patientName: "",
@@ -107,12 +125,96 @@ const Appointments = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link to="/login">
-              <button className="px-4 py-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-all">Login</button>
-            </Link>
-            <Link to="/register">
-              <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all">Get Started</button>
-            </Link>
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition duration-300"
+                >
+                  <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                    {user.fullName}
+                  </span>
+                  <span className={`hidden sm:inline px-2 py-0.5 text-xs font-semibold rounded capitalize ${
+                    user.role === "admin"
+                      ? "bg-purple-100 text-purple-800"
+                      : user.role === "doctor"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-green-100 text-green-800"
+                  }`}>
+                    {user.role}
+                  </span>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-gray-600" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showProfileDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowProfileDropdown(false)}
+                    ></div>
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-20">
+                      {/* User Info */}
+                      <div className="px-4 py-3 border-b border-gray-200">
+                        <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
+                        <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                        <span className={`inline-block mt-2 px-2 py-0.5 text-xs font-semibold rounded capitalize ${
+                          user.role === "admin"
+                            ? "bg-purple-100 text-purple-800"
+                            : user.role === "doctor"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-green-100 text-green-800"
+                        }`}>
+                          {user.role}
+                        </span>
+                      </div>
+
+                      {/* Profile Link */}
+                      {user.role === "admin" ? (
+                        <Link
+                          to="/admin"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-blue-600 hover:bg-blue-50 transition font-semibold"
+                        >
+                          <Activity className="h-5 w-5 text-blue-500" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/patient-dashboard"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 transition"
+                        >
+                          <UserCircle className="h-5 w-5" />
+                          <span>My Profile</span>
+                        </Link>
+                      )}
+
+                      {/* Logout button */}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition border-t border-gray-100"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link to="/login">
+                  <button className="px-4 py-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-all">Login</button>
+                </Link>
+                <Link to="/register">
+                  <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all">Get Started</button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>

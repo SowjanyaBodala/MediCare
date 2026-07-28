@@ -103,8 +103,20 @@ const Billing = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition duration-300"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition duration-300"
                 >
+                  <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                    {currentUser.fullName}
+                  </span>
+                  <span className={`hidden sm:inline px-2 py-0.5 text-xs font-semibold rounded capitalize ${
+                    currentUser.role === "admin"
+                      ? "bg-purple-100 text-purple-800"
+                      : currentUser.role === "doctor"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-green-100 text-green-800"
+                  }`}>
+                    {currentUser.role}
+                  </span>
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
                     {currentUser.fullName.charAt(0).toUpperCase()}
                   </div>
@@ -121,7 +133,15 @@ const Billing = () => {
                       <div className="px-4 py-3 border-b border-gray-200">
                         <p className="text-sm font-medium text-gray-900">{currentUser.fullName}</p>
                         <p className="text-sm text-gray-500 truncate">{currentUser.email}</p>
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded">Patient</span>
+                        <span className={`inline-block mt-2 px-2 py-0.5 text-xs font-semibold rounded capitalize ${
+                          currentUser.role === "admin"
+                            ? "bg-purple-100 text-purple-800"
+                            : currentUser.role === "doctor"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-green-100 text-green-800"
+                        }`}>
+                          {currentUser.role}
+                        </span>
                       </div>
                       <Link
                         to="/patient-dashboard"
