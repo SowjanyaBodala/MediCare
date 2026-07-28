@@ -53,6 +53,40 @@ const Login = () => {
     }
   };
 
+  const handleQuickLogin = async (role) => {
+    let credentials = {};
+    if (role === "admin") {
+      credentials = { email: "admin@medicare.local", password: "Admin@123456" };
+    } else if (role === "patient") {
+      credentials = { email: "john@example.com", password: "password123" };
+    } else if (role === "doctor") {
+      credentials = { email: "sarah.johnson@medicare.local", password: "password123" };
+    }
+    
+    setEmail(credentials.email);
+    setPassword(credentials.password);
+    setLoading(true);
+
+    try {
+      const res = await login(credentials);
+      if (res && res.data) {
+        if (res.data.role === "admin") {
+          navigate("/admin");
+        } else if (res.data.role === "patient") {
+          navigate("/patient-dashboard");
+        } else if (res.data.role === "doctor") {
+          navigate("/");
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (error) {
+      console.error("Quick login error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       {/* Navigation */}
@@ -190,6 +224,36 @@ const Login = () => {
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
+
+          {/* Quick Demo Login Panel */}
+          <div className="mt-8 border-t pt-6">
+            <p className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+              Quick Demo Login
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleQuickLogin("admin")}
+                className="py-2.5 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-bold transition border border-purple-200"
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin("patient")}
+                className="py-2.5 px-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl text-xs font-bold transition border border-green-200"
+              >
+                Patient
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin("doctor")}
+                className="py-2.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition border border-blue-200"
+              >
+                Doctor
+              </button>
+            </div>
+          </div>
 
           <div className="mt-6 text-center text-sm">
             <p className="text-gray-600">
