@@ -71,6 +71,7 @@ const MedicalRecords = () => {
             doctor: doctorName.startsWith("Dr.") || doctorName === "Self Uploaded" ? doctorName : `Dr. ${doctorName}`,
             type: isImage ? "image" : "pdf",
             description: record.description,
+            fileUrl: record.files?.[0]?.url || "",
           };
         });
         setRecords(mappedRecords);
@@ -132,6 +133,14 @@ const MedicalRecords = () => {
 
   const filteredRecords = records.filter(record => activeCategory === "All" || record.category === activeCategory);
 
+  const handleViewFile = (fileUrl) => {
+    if (fileUrl) {
+      window.open(fileUrl, "_blank");
+    } else {
+      toast.error("No file available for this record");
+    }
+  };
+
   const RecordCard = ({ record }) => (
     <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all hover:-translate-y-1">
       <div className="flex items-start justify-between mb-4">
@@ -148,7 +157,10 @@ const MedicalRecords = () => {
       </div>
       <div className="flex items-center justify-between pt-4 border-t">
         <p className="text-sm text-gray-600">By {record.doctor}</p>
-        <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-semibold hover:shadow-lg hover:scale-105 transition-all">
+        <button 
+          onClick={() => handleViewFile(record.fileUrl)}
+          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-semibold hover:shadow-lg hover:scale-105 transition-all"
+        >
           View
         </button>
       </div>
